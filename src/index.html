@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remindr</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Title Bar -->
+  <div class="titlebar">
+    <span class="titlebar-title">REMINDR</span>
+    <div class="titlebar-controls">
+      <button class="titlebar-btn" id="settings-btn">
+        <span class="material-icons">settings</span>
+      </button>
+      <button class="titlebar-btn" id="minimize-btn">
+        <span class="material-icons">remove</span>
+      </button>
+      <button class="titlebar-btn close" id="close-btn">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-overlay" id="settings-overlay">
+    <div class="settings-panel">
+      <div class="settings-header">
+        <div class="settings-title">
+          <span class="material-icons">settings</span>
+          Einstellungen
+        </div>
+        <button class="close-btn" id="settings-close">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="settings-content">
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">Autostart</div>
+            <div class="setting-desc">App beim Systemstart automatisch öffnen</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="autostart-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">Quick-Add Hotkey</div>
+            <div class="setting-desc">Globaler Shortcut für schnelles Erstellen</div>
+          </div>
+          <div class="hotkey-input-wrapper">
+            <input type="text" class="hotkey-input" id="hotkey-input" readonly placeholder="Klicken und drücken">
+            <button class="hotkey-clear" id="hotkey-clear">
+              <span class="material-icons">clear</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="setting-hint">
+          <span class="material-icons">info</span>
+          Drücke den Hotkey um das Quick-Add Overlay zu öffnen
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Form Section -->
+    <div class="form-section">
+      <div class="form-title">
+        <span class="material-icons">add_alert</span>
+        Neuer Reminder
+      </div>
+      <form id="reminder-form">
+        <div class="form-group full">
+          <textarea class="form-input" id="reminder-text" placeholder="Woran möchtest du erinnert werden?" required></textarea>
+        </div>
+        
+        <div class="form-group full" style="margin-top: 16px;">
+          <label class="form-label">Erinnere mich in</label>
+          <div class="quick-times" id="quick-times">
+            <button type="button" class="quick-time-btn" data-minutes="15">15m</button>
+            <button type="button" class="quick-time-btn" data-minutes="30">30m</button>
+            <button type="button" class="quick-time-btn" data-minutes="60">1h</button>
+            <button type="button" class="quick-time-btn" data-minutes="180">3h</button>
+            <button type="button" class="quick-time-btn" data-minutes="1440">24h</button>
+            <button type="button" class="quick-time-btn custom-toggle" id="custom-toggle">
+              <span class="material-icons">event</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="custom-time-section" id="custom-time-section">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Datum</label>
+              <input type="date" class="form-input" id="reminder-date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Uhrzeit</label>
+              <input type="time" class="form-input" id="reminder-time">
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="selected-datetime">
+        <button type="submit" class="btn-primary">
+          <span class="material-icons">add</span>
+          Erstellen
+        </button>
+      </form>
+    </div>
+
+    <!-- Reminders List -->
+    <div class="reminders-section">
+      <div class="reminders-header">
+        <div class="reminders-title">
+          <span class="material-icons">schedule</span>
+          Anstehend
+          <span class="reminders-count" id="reminders-count">(0)</span>
+        </div>
+        <button class="btn-clear" id="clear-btn">
+          <span class="material-icons">delete_sweep</span>
+          Erledigte löschen
+        </button>
+      </div>
+      <div class="reminders-list" id="reminders-list">
+        <!-- Reminders will be rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

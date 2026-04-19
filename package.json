@@ -1,0 +1,36 @@
+{
+  "name": "remindr",
+  "version": "1.0.0",
+  "description": "Lightweight reminder application",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": ["reminder", "electron", "productivity"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.remindr.app",
+    "productName": "Remindr",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/reminder-icon.ico"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ]
+  }
+}

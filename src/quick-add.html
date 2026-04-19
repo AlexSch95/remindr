@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remindr - Quick Add</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="css/quick-add.css" rel="stylesheet">
+</head>
+<body>
+  <div class="overlay">
+    <div class="header">
+      <div class="title">
+        <span class="material-icons">bolt</span>
+        Quick Reminder
+      </div>
+      <button class="close-btn" id="close-btn">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <input type="text" class="form-input" id="reminder-text" placeholder="Woran erinnern?" autofocus>
+
+    <div class="quick-times">
+      <button type="button" class="quick-time-btn" data-minutes="15">15m</button>
+      <button type="button" class="quick-time-btn" data-minutes="30">30m</button>
+      <button type="button" class="quick-time-btn selected" data-minutes="60">1h</button>
+      <button type="button" class="quick-time-btn" data-minutes="180">3h</button>
+      <button type="button" class="quick-time-btn" data-minutes="1440">24h</button>
+    </div>
+
+    <button class="btn-add" id="add-btn" disabled>
+      <span class="material-icons">add</span>
+      Erstellen
+    </button>
+
+    <div class="hint">
+      <kbd>Enter</kbd> zum Speichern &middot; <kbd>Esc</kbd> zum Schließen
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const textInput = document.getElementById('reminder-text');
+    const addBtn = document.getElementById('add-btn');
+    const closeBtn = document.getElementById('close-btn');
+    const quickTimeBtns = document.querySelectorAll('.quick-time-btn');
+
+    let selectedMinutes = 60;
+
+    // Quick time buttons
+    quickTimeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        quickTimeBtns.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedMinutes = parseInt(btn.dataset.minutes);
+      });
+    });
+
+    // Enable/disable add button
+    textInput.addEventListener('input', () => {
+      addBtn.disabled = !textInput.value.trim();
+    });
+
+    // Add reminder
+    function addReminder() {
+      const text = textInput.value.trim();
+      if (!text) return;
+
+      const datetime = new Date(Date.now() + selectedMinutes * 60 * 1000).toISOString();
+      
+      ipcRenderer.send('quick-add-reminder', { datetime, text });
+      
+      // Reset
+      textInput.value = '';
+      addBtn.disabled = true;
+    }
+
+    addBtn.addEventListener('click', addReminder);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !addBtn.disabled) {
+        addReminder();
+      } else if (e.key === 'Escape') {
+        ipcRenderer.send('close-quick-add');
+      }
+    });
+
+    closeBtn.addEventListener('click', () => {
+      ipcRenderer.send('close-quick-add');
+    });
+
+    // Focus input when window becomes visible
+    ipcRenderer.on('focus-input', () => {
+      textInput.value = '';
+      addBtn.disabled = true;
+      textInput.focus();
+    });
+  </script>
+</body>
+</html>
