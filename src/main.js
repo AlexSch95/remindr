@@ -87,9 +87,9 @@ function createQuickAddWindow() {
   
   quickAddWindow = new BrowserWindow({
     width: 420,
-    height: 260,
+    height: 290,
     x: Math.round((width - 420) / 2),
-    y: Math.round((height - 260) / 2),
+    y: Math.round((height - 290) / 2),
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -126,7 +126,7 @@ function toggleQuickAdd() {
     
     quickAddWindow.setPosition(
       Math.round(x + (width - 420) / 2),
-      Math.round(y + (height - 260) / 2)
+      Math.round(y + (height - 290) / 2)
     );
     
     quickAddWindow.show();

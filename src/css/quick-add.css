@@ -56,8 +56,6 @@ body {
   border: 1px solid var(--border-light);
   border-radius: 20px;
   padding: 22px 26px 26px;
-  box-shadow: var(--shadow-lg), var(--accent-glow),
-              0 0 0 1px rgba(255, 255, 255, 0.03);
   height: 100%;
   display: flex;
   flex-direction: column;
