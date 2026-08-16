@@ -273,14 +273,58 @@ const settingsClose = document.getElementById('settings-close');
 const autostartToggle = document.getElementById('autostart-toggle');
 const hotkeyInput = document.getElementById('hotkey-input');
 const hotkeyClear = document.getElementById('hotkey-clear');
+const discordWebhookInput = document.getElementById('discord-webhook-input');
+const discordUserIdInput = document.getElementById('discord-user-id-input');
+const discordTestBtn = document.getElementById('discord-test-btn');
+const discordTestStatus = document.getElementById('discord-test-status');
 
 let isRecordingHotkey = false;
+
+function normalizeDiscordUserId(userId) {
+  return (userId || '').trim().replace(/\D/g, '');
+}
+
+function setDiscordTestStatus(message, type = '') {
+  discordTestStatus.textContent = message;
+  discordTestStatus.className = `settings-status ${type}`.trim();
+}
 
 // Load settings
 async function loadSettings() {
   const settings = await ipcRenderer.invoke('get-settings');
   autostartToggle.checked = settings.autostart;
   hotkeyInput.value = formatHotkey(settings.hotkey);
+  discordWebhookInput.value = settings.discordWebhookUrl || '';
+  discordUserIdInput.value = settings.discordUserId || '';
+}
+
+async function saveDiscordSettings() {
+  const discordWebhookUrl = discordWebhookInput.value.trim();
+  const discordUserId = normalizeDiscordUserId(discordUserIdInput.value);
+
+  const settings = await ipcRenderer.invoke('set-discord-settings', {
+    discordWebhookUrl,
+    discordUserId
+  });
+
+  discordWebhookInput.value = settings.discordWebhookUrl || '';
+  discordUserIdInput.value = settings.discordUserId || '';
+}
+
+async function testDiscordWebhook() {
+  setDiscordTestStatus('Sende Testnachricht...', 'pending');
+  discordTestBtn.disabled = true;
+
+  await saveDiscordSettings();
+  const result = await ipcRenderer.invoke('test-discord-webhook');
+
+  if (result.ok) {
+    setDiscordTestStatus('Testnachricht erfolgreich gesendet.', 'success');
+  } else {
+    setDiscordTestStatus(result.error || 'Discord-Test fehlgeschlagen.', 'error');
+  }
+
+  discordTestBtn.disabled = false;
 }
 
 // Format hotkey for display
@@ -354,3 +398,23 @@ hotkeyClear.addEventListener('click', async () => {
   await ipcRenderer.invoke('set-hotkey', '');
   hotkeyInput.value = '';
 });
+
+discordWebhookInput.addEventListener('blur', saveDiscordSettings);
+discordWebhookInput.addEventListener('change', saveDiscordSettings);
+
+discordUserIdInput.addEventListener('blur', saveDiscordSettings);
+discordUserIdInput.addEventListener('change', saveDiscordSettings);
+
+discordWebhookInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    discordWebhookInput.blur();
+  }
+});
+
+discordUserIdInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    discordUserIdInput.blur();
+  }
+});
+
+discordTestBtn.addEventListener('click', testDiscordWebhook);

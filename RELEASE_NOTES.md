@@ -27,6 +27,9 @@ Remindr is a lightweight desktop reminder app for Windows. It runs quietly in th
 ### Settings
 - Launch at Windows startup
 - Configurable hotkey
+- Optional Discord webhook for due reminders
+- Optional Discord User-ID for echte Erwähnungen im Discord-Webhook
+- Discord-Testbutton in den Einstellungen
 
 ## Technical Details
 

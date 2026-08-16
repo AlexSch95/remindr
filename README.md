@@ -12,6 +12,7 @@ A lightweight desktop reminder application built with [Electron](https://www.ele
 - **Quick Time Presets** — One-click buttons for 15m, 30m, 1h, 3h, and 24h
 - **Persistent Notifications** — Reminders repeat every minute until marked complete or snoozed
 - **Autostart Support** — Optional launch at system startup
+- **Discord Webhook Support** — Optional webhook delivery sends due reminders to Discord once per due cycle and can mention a user by Discord ID
 
 ## Techniques
 
@@ -56,6 +57,15 @@ remindr/
 npm start    # Run in development
 npm run build # Package for distribution
 ```
+
+## Discord Webhook Setup
+
+Open the settings dialog and fill in these optional fields:
+
+- **Discord Webhook** — Full webhook URL from your Discord channel integration
+- **Discord User-ID** — Numeric Discord user ID for a real mention via the webhook
+
+Use the test button in settings to send an immediate test message. When a reminder becomes due, Remindr posts it to Discord once. If you snooze the reminder and it becomes due again later, a new Discord message is sent for that new due cycle.
 
 ## License
 

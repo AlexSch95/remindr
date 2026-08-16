@@ -16,7 +16,9 @@ let tray;
 let reminders = [];
 let settings = {
   autostart: false,
-  hotkey: 'CommandOrControl+Shift+R'
+  hotkey: 'CommandOrControl+Shift+R',
+  discordWebhookUrl: '',
+  discordUserId: ''
 };
 
 // Paths
@@ -54,6 +56,66 @@ function loadSettings() {
 
 function saveSettings() {
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+}
+
+function normalizeDiscordUserId(userId) {
+  return (userId || '').trim().replace(/\D/g, '');
+}
+
+async function sendDiscordWebhook(reminder, options = {}) {
+  if (!settings.discordWebhookUrl) {
+    return {
+      ok: false,
+      error: 'Bitte zuerst einen Discord-Webhook hinterlegen.'
+    };
+  }
+
+  const mentionUserId = normalizeDiscordUserId(settings.discordUserId);
+  const mentionPrefix = mentionUserId ? `<@${mentionUserId}> ` : '';
+
+  try {
+    const response = await fetch(settings.discordWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        content: `${mentionPrefix}${reminder.text}`.trim(),
+        embeds: [
+          {
+            title: options.title || 'Remindr',
+            description: reminder.text,
+            fields: [
+              {
+                name: 'Zeitpunkt',
+                value: new Date(reminder.datetime).toLocaleString('de-DE')
+              }
+            ],
+            color: 10019066,
+            timestamp: new Date().toISOString()
+          }
+        ],
+        allowed_mentions: {
+          users: mentionUserId ? [mentionUserId] : [],
+          parse: []
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Discord webhook failed with status ${response.status}`);
+    }
+
+    return {
+      ok: true
+    };
+  } catch (error) {
+    console.error('Failed to send Discord webhook:', error);
+    return {
+      ok: false,
+      error: 'Discord-Test fehlgeschlagen. Bitte Webhook und User-ID prüfen.'
+    };
+  }
 }
 
 // ============ Autostart & Hotkey ============
@@ -213,6 +275,22 @@ function checkReminders() {
         reminders[index].lastNotified = now.toISOString();
         reminders[index].triggered = true;
         saveReminders();
+
+        if (!reminders[index].discordNotified) {
+          sendDiscordWebhook(reminder).then((result) => {
+            if (!result.ok) {
+              return;
+            }
+
+            const reminderIndex = reminders.findIndex(r => r.id === reminder.id);
+            if (reminderIndex === -1 || reminders[reminderIndex].discordNotified) {
+              return;
+            }
+
+            reminders[reminderIndex].discordNotified = new Date().toISOString();
+            saveReminders();
+          });
+        }
         
         if (mainWindow) {
           mainWindow.webContents.send('reminders-updated', reminders);
@@ -307,6 +385,7 @@ ipcMain.handle('add-reminder', (event, reminder) => {
   reminder.completed = false;
   reminder.triggered = false;
   reminder.lastNotified = null;
+  reminder.discordNotified = null;
   reminders.push(reminder);
   saveReminders();
   return reminders;
@@ -334,6 +413,7 @@ ipcMain.handle('snooze-reminder', (event, { id, minutes }) => {
     reminders[index].datetime = newTime.toISOString();
     reminders[index].triggered = false;
     reminders[index].lastNotified = null;
+    reminders[index].discordNotified = null;
     saveReminders();
   }
   return reminders;
@@ -375,6 +455,24 @@ ipcMain.handle('set-hotkey', (event, hotkey) => {
   return settings;
 });
 
+ipcMain.handle('set-discord-settings', (event, discordSettings) => {
+  settings.discordWebhookUrl = (discordSettings.discordWebhookUrl || '').trim();
+  settings.discordUserId = normalizeDiscordUserId(discordSettings.discordUserId);
+  saveSettings();
+  return settings;
+});
+
+ipcMain.handle('test-discord-webhook', async () => {
+  const testReminder = {
+    text: 'Das ist eine Testnachricht von Remindr.',
+    datetime: new Date().toISOString()
+  };
+
+  return sendDiscordWebhook(testReminder, {
+    title: 'Remindr Test'
+  });
+});
+
 // ============ IPC Handlers - Quick Add ============
 
 ipcMain.on('quick-add-reminder', (event, reminder) => {
@@ -382,6 +480,7 @@ ipcMain.on('quick-add-reminder', (event, reminder) => {
   reminder.completed = false;
   reminder.triggered = false;
   reminder.lastNotified = null;
+  reminder.discordNotified = null;
   reminders.push(reminder);
   saveReminders();
   

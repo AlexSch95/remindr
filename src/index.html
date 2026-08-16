@@ -63,9 +63,22 @@
           </div>
         </div>
 
+        <div class="setting-item setting-item-stack">
+          <div class="setting-info">
+            <div class="setting-label">Discord Webhook</div>
+            <div class="setting-desc">Wenn gesetzt, wird ein fälliger Reminder einmalig an diesen Webhook geschickt</div>
+          </div>
+          <div class="setting-inputs">
+            <input type="url" class="settings-text-input" id="discord-webhook-input" placeholder="https://discord.com/api/webhooks/...">
+            <input type="text" class="settings-text-input" id="discord-user-id-input" placeholder="Discord User-ID für echte Erwähnung">
+            <button type="button" class="settings-action-btn" id="discord-test-btn">Discord testen</button>
+            <div class="settings-status" id="discord-test-status"></div>
+          </div>
+        </div>
+
         <div class="setting-hint">
           <span class="material-icons">info</span>
-          Drücke den Hotkey um das Quick-Add Overlay zu öffnen
+          Drücke den Hotkey um das Quick-Add Overlay zu öffnen. Für echte Discord-Erwähnungen trage die numerische User-ID ein.
         </div>
       </div>
     </div>

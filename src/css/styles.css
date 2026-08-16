@@ -848,6 +848,10 @@ textarea.form-input {
   transition: all 0.2s ease;
 }
 
+.setting-item-stack {
+  align-items: flex-start;
+}
+
 .setting-item:last-of-type {
   border-bottom: none;
   padding-bottom: 0;
@@ -935,6 +939,79 @@ textarea.form-input {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.setting-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.settings-text-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-text-input:focus {
+  outline: none;
+  border-color: var(--accent-1);
+  background: rgba(151, 224, 250, 0.05);
+  box-shadow: 0 0 0 4px rgba(151, 224, 250, 0.15), 0 0 20px rgba(151, 224, 250, 0.1);
+}
+
+.settings-text-input::placeholder {
+  color: var(--text-muted);
+}
+
+.settings-action-btn {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(151, 224, 250, 0.12);
+  border: 1px solid rgba(151, 224, 250, 0.3);
+  border-radius: 10px;
+  color: var(--accent-1);
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-action-btn:hover:not(:disabled) {
+  background: rgba(151, 224, 250, 0.18);
+  border-color: rgba(151, 224, 250, 0.45);
+}
+
+.settings-action-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.settings-status {
+  min-height: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.settings-status.pending {
+  color: var(--accent-1);
+}
+
+.settings-status.success {
+  color: var(--success);
+}
+
+.settings-status.error {
+  color: #fca5a5;
 }
 
 .hotkey-input {
