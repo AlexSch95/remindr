@@ -31,7 +31,7 @@
       <div class="settings-header">
         <div class="settings-title">
           <span class="material-icons">settings</span>
-          Einstellungen
+          Settings
         </div>
         <button class="close-btn" id="settings-close">
           <span class="material-icons">close</span>
@@ -42,7 +42,7 @@
         <div class="setting-item">
           <div class="setting-info">
             <div class="setting-label">Autostart</div>
-            <div class="setting-desc">App beim Systemstart automatisch öffnen</div>
+            <div class="setting-desc">Launch App on Systemstart</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="autostart-toggle">
@@ -53,10 +53,10 @@
         <div class="setting-item">
           <div class="setting-info">
             <div class="setting-label">Quick-Add Hotkey</div>
-            <div class="setting-desc">Globaler Shortcut für schnelles Erstellen</div>
+            <div class="setting-desc">Global Shortcut for Quick Creation</div>
           </div>
           <div class="hotkey-input-wrapper">
-            <input type="text" class="hotkey-input" id="hotkey-input" readonly placeholder="Klicken und drücken">
+            <input type="text" class="hotkey-input" id="hotkey-input" readonly placeholder="Click and Press">
             <button class="hotkey-clear" id="hotkey-clear">
               <span class="material-icons">clear</span>
             </button>
@@ -66,19 +66,42 @@
         <div class="setting-item setting-item-stack">
           <div class="setting-info">
             <div class="setting-label">Discord Webhook</div>
-            <div class="setting-desc">Wenn gesetzt, wird ein fälliger Reminder einmalig an diesen Webhook geschickt</div>
+            <div class="setting-desc">If set, a due reminder will be sent once to this webhook</div>
           </div>
           <div class="setting-inputs">
             <input type="url" class="settings-text-input" id="discord-webhook-input" placeholder="https://discord.com/api/webhooks/...">
-            <input type="text" class="settings-text-input" id="discord-user-id-input" placeholder="Discord User-ID für echte Erwähnung">
-            <button type="button" class="settings-action-btn" id="discord-test-btn">Discord testen</button>
+            <input type="text" class="settings-text-input" id="discord-user-id-input" placeholder="Discord User-ID for real mention">
+            <button type="button" class="settings-action-btn" id="discord-test-btn">Test Discord</button>
             <div class="settings-status" id="discord-test-status"></div>
+          </div>
+        </div>
+
+        <div class="setting-item setting-item-stack">
+          <div class="setting-info">
+            <div class="setting-label">Sound</div>
+            <div class="setting-desc">Notification sound volume and type</div>
+          </div>
+          <div class="setting-inputs">
+            <div class="sound-volume-row">
+              <span class="material-icons volume-icon">volume_down</span>
+              <input type="range" class="sound-slider" id="sound-volume" min="0" max="100" value="30">
+              <span class="material-icons volume-icon">volume_up</span>
+              <span class="sound-percent" id="sound-volume-label">30%</span>
+            </div>
+            <div class="sound-type-row" id="sound-type-row">
+              <button type="button" class="sound-type-btn" data-sound="classic">Classic</button>
+              <button type="button" class="sound-type-btn" data-sound="chime">Chime</button>
+              <button type="button" class="sound-type-btn" data-sound="digital">Digital</button>
+              <button type="button" class="sound-type-btn" data-sound="gentle">Gentle</button>
+            </div>
+            <button type="button" class="settings-action-btn" id="sound-test-btn">Test Sound</button>
+            <div class="settings-status" id="sound-test-status"></div>
           </div>
         </div>
 
         <div class="setting-hint">
           <span class="material-icons">info</span>
-          Drücke den Hotkey um das Quick-Add Overlay zu öffnen. Für echte Discord-Erwähnungen trage die numerische User-ID ein.
+          Press the hotkey to open the Quick-Add overlay. For real Discord mentions, enter the numeric user ID.
         </div>
       </div>
     </div>
@@ -90,15 +113,15 @@
     <div class="form-section">
       <div class="form-title">
         <span class="material-icons">add_alert</span>
-        Neuer Reminder
+        New Reminder
       </div>
       <form id="reminder-form">
         <div class="form-group full">
-          <textarea class="form-input" id="reminder-text" placeholder="Woran möchtest du erinnert werden?" required></textarea>
+          <textarea class="form-input" id="reminder-text" placeholder="What should i remind you of?" required></textarea>
         </div>
         
         <div class="form-group full" style="margin-top: 16px;">
-          <label class="form-label">Erinnere mich in</label>
+          <label class="form-label">Remind me in</label>
           <div class="quick-times" id="quick-times">
             <button type="button" class="quick-time-btn" data-minutes="15">15m</button>
             <button type="button" class="quick-time-btn" data-minutes="30">30m</button>
@@ -114,11 +137,11 @@
         <div class="custom-time-section" id="custom-time-section">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Datum</label>
+              <label class="form-label">Date</label>
               <input type="date" class="form-input" id="reminder-date">
             </div>
             <div class="form-group">
-              <label class="form-label">Uhrzeit</label>
+              <label class="form-label">Time</label>
               <input type="time" class="form-input" id="reminder-time">
             </div>
           </div>
@@ -127,7 +150,7 @@
         <input type="hidden" id="selected-datetime">
         <button type="submit" class="btn-primary">
           <span class="material-icons">add</span>
-          Erstellen
+          Create
         </button>
       </form>
     </div>
@@ -137,12 +160,12 @@
       <div class="reminders-header">
         <div class="reminders-title">
           <span class="material-icons">schedule</span>
-          Anstehend
+          Upcoming
           <span class="reminders-count" id="reminders-count">(0)</span>
         </div>
         <button class="btn-clear" id="clear-btn">
           <span class="material-icons">delete_sweep</span>
-          Erledigte löschen
+          Clear Completed
         </button>
       </div>
       <div class="reminders-list" id="reminders-list">

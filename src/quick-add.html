@@ -28,15 +28,31 @@
       <button type="button" class="quick-time-btn selected" data-minutes="60">1h</button>
       <button type="button" class="quick-time-btn" data-minutes="180">3h</button>
       <button type="button" class="quick-time-btn" data-minutes="1440">24h</button>
+      <button type="button" class="quick-time-btn custom-toggle" id="custom-toggle">
+        <span class="material-icons">event</span>
+      </button>
+    </div>
+
+    <div class="custom-time-section" id="custom-time-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Datum</label>
+          <input type="date" class="form-input" id="reminder-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Uhrzeit</label>
+          <input type="time" class="form-input" id="reminder-time">
+        </div>
+      </div>
     </div>
 
     <button class="btn-add" id="add-btn" disabled>
       <span class="material-icons">add</span>
-      Erstellen
+      Create
     </button>
 
     <div class="hint">
-      <kbd>Enter</kbd> zum Speichern &middot; <kbd>Esc</kbd> zum Schließen
+      <kbd>Enter</kbd> to save &middot; <kbd>Esc</kbd> to close
     </div>
   </div>
 
@@ -46,17 +62,58 @@
     const textInput = document.getElementById('reminder-text');
     const addBtn = document.getElementById('add-btn');
     const closeBtn = document.getElementById('close-btn');
-    const quickTimeBtns = document.querySelectorAll('.quick-time-btn');
+    const quickTimeBtns = document.querySelectorAll('.quick-time-btn[data-minutes]');
+    const customToggle = document.getElementById('custom-toggle');
+    const customTimeSection = document.getElementById('custom-time-section');
+    const reminderDate = document.getElementById('reminder-date');
+    const reminderTime = document.getElementById('reminder-time');
 
     let selectedMinutes = 60;
+    let useCustomTime = false;
+
+    // Set default date to today
+    function setDefaultDate() {
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      reminderDate.value = dateStr;
+
+      // Set default time to next hour
+      const nextHour = new Date(today.getTime() + 60 * 60 * 1000);
+      const hours = String(nextHour.getHours()).padStart(2, '0');
+      const minutes = String(Math.ceil(nextHour.getMinutes() / 5) * 5).padStart(2, '0');
+      reminderTime.value = `${hours}:${minutes === '60' ? '00' : minutes}`;
+    }
 
     // Quick time buttons
     quickTimeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         quickTimeBtns.forEach(b => b.classList.remove('selected'));
+        customToggle.classList.remove('selected');
+        customTimeSection.classList.remove('visible');
         btn.classList.add('selected');
         selectedMinutes = parseInt(btn.dataset.minutes);
+        useCustomTime = false;
+        ipcRenderer.send('resize-quick-add', false);
       });
+    });
+
+    // Toggle custom time
+    customToggle.addEventListener('click', () => {
+      useCustomTime = !useCustomTime;
+      selectedMinutes = null;
+
+      quickTimeBtns.forEach(b => b.classList.remove('selected'));
+
+      if (useCustomTime) {
+        customToggle.classList.add('selected');
+        customTimeSection.classList.add('visible');
+        setDefaultDate();
+      } else {
+        customToggle.classList.remove('selected');
+        customTimeSection.classList.remove('visible');
+      }
+
+      ipcRenderer.send('resize-quick-add', useCustomTime);
     });
 
     // Enable/disable add button
@@ -69,10 +126,19 @@
       const text = textInput.value.trim();
       if (!text) return;
 
-      const datetime = new Date(Date.now() + selectedMinutes * 60 * 1000).toISOString();
-      
+      let datetime;
+      if (useCustomTime) {
+        if (!reminderDate.value || !reminderTime.value) {
+          alert('Bitte Datum und Uhrzeit auswählen');
+          return;
+        }
+        datetime = `${reminderDate.value}T${reminderTime.value}`;
+      } else {
+        datetime = new Date(Date.now() + selectedMinutes * 60 * 1000).toISOString();
+      }
+
       ipcRenderer.send('quick-add-reminder', { datetime, text });
-      
+
       // Reset
       textInput.value = '';
       addBtn.disabled = true;
@@ -97,6 +163,15 @@
     ipcRenderer.on('focus-input', () => {
       textInput.value = '';
       addBtn.disabled = true;
+      // Reset to compact mode with default 1h selection
+      useCustomTime = false;
+      selectedMinutes = 60;
+      customToggle.classList.remove('selected');
+      customTimeSection.classList.remove('visible');
+      quickTimeBtns.forEach(b => b.classList.remove('selected'));
+      const defaultBtn = document.querySelector('.quick-time-btn[data-minutes="60"]');
+      if (defaultBtn) defaultBtn.classList.add('selected');
+      ipcRenderer.send('resize-quick-add', false);
       textInput.focus();
     });
   </script>

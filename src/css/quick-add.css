@@ -155,7 +155,7 @@ body {
 /* Quick Time Buttons */
 .quick-times {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
   margin-bottom: 14px;
 }
@@ -189,6 +189,60 @@ body {
   color: #000;
   font-weight: 700;
   box-shadow: var(--accent-glow);
+}
+
+.quick-time-btn.custom-toggle {
+  background: transparent;
+}
+
+.quick-time-btn.custom-toggle.selected {
+  background: var(--accent-gradient);
+}
+
+.quick-time-btn .material-icons {
+  font-size: 18px;
+}
+
+/* Custom Time Section */
+.custom-time-section {
+  display: none;
+  margin-bottom: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  animation: overlayIn 0.25s ease-out;
+}
+
+.custom-time-section.visible {
+  display: block;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.custom-time-section .form-input {
+  margin-bottom: 0;
+  padding: 11px 12px;
+}
+
+/* Date/time input color scheme fixes */
+input[type="date"].form-input,
+input[type="time"].form-input {
+  color-scheme: dark;
 }
 
 /* Add Button */

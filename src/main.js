@@ -12,13 +12,20 @@ let mainWindow;
 let quickAddWindow;
 let tray;
 
+// Quick Add Window Dimensions
+const QUICK_ADD_WIDTH = 420;
+const QUICK_ADD_HEIGHT = 290;
+const QUICK_ADD_HEIGHT_EXPANDED = 410;
+
 // Data
 let reminders = [];
 let settings = {
   autostart: false,
   hotkey: 'CommandOrControl+Shift+R',
   discordWebhookUrl: '',
-  discordUserId: ''
+  discordUserId: '',
+  soundVolume: 0.3,
+  soundType: 'classic'
 };
 
 // Paths
@@ -149,10 +156,10 @@ function createQuickAddWindow() {
   const { width, height } = primaryDisplay.workAreaSize;
   
   quickAddWindow = new BrowserWindow({
-    width: 420,
-    height: 290,
-    x: Math.round((width - 420) / 2),
-    y: Math.round((height - 290) / 2),
+    width: QUICK_ADD_WIDTH,
+    height: QUICK_ADD_HEIGHT,
+    x: Math.round((width - QUICK_ADD_WIDTH) / 2),
+    y: Math.round((height - QUICK_ADD_HEIGHT) / 2),
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -188,8 +195,8 @@ function toggleQuickAdd() {
     const { x, y, width, height } = display.workArea;
     
     quickAddWindow.setPosition(
-      Math.round(x + (width - 420) / 2),
-      Math.round(y + (height - 290) / 2)
+      Math.round(x + (width - QUICK_ADD_WIDTH) / 2),
+      Math.round(y + (height - QUICK_ADD_HEIGHT) / 2)
     );
     
     quickAddWindow.show();
@@ -202,10 +209,11 @@ function toggleQuickAdd() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 420,
-    height: 600,
-    minWidth: 380,
-    minHeight: 500,
+    width: 450,
+    height: 665,
+    minWidth: 450,
+    minHeight: 665,
+    resizable: false,
     frame: false,
     transparent: false,
     backgroundColor: '#050505',
@@ -317,29 +325,69 @@ function showNotification(reminder) {
   
   // Play notification sound
   if (mainWindow) {
-    mainWindow.webContents.executeJavaScript(`
-      (function() {
-        try {
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-          
-          oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-          oscillator.frequency.setValueAtTime(660, audioContext.currentTime + 0.1);
-          oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.2);
-          
-          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-          
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.3);
-        } catch(e) {}
-      })();
-    `);
+    const volume = typeof settings.soundVolume === 'number' ? settings.soundVolume : 0.3;
+    const soundType = settings.soundType || 'classic';
+    mainWindow.webContents.executeJavaScript(buildSoundScript(soundType, volume));
   }
+}
+
+// Build the Web Audio script for a given sound type and volume
+function buildSoundScript(soundType, volume) {
+  return `
+    (function() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const masterGain = audioContext.createGain();
+        masterGain.gain.setValueAtTime(${volume}, audioContext.currentTime);
+        masterGain.connect(audioContext.destination);
+
+        function playTone(type, freq, startDelay, duration, gainValue, freqEnd) {
+          const osc = audioContext.createOscillator();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioContext.currentTime + startDelay);
+          if (freqEnd) {
+            osc.frequency.exponentialRampToValueAtTime(freqEnd, audioContext.currentTime + startDelay + duration);
+          }
+          const g = audioContext.createGain();
+          g.gain.setValueAtTime(gainValue, audioContext.currentTime + startDelay);
+          g.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + startDelay + duration);
+          osc.connect(g);
+          g.connect(masterGain);
+          osc.start(audioContext.currentTime + startDelay);
+          osc.stop(audioContext.currentTime + startDelay + duration);
+        }
+
+        switch ('${soundType}') {
+          case 'chime':
+            // Ascending C-E-G arpeggio (pleasant)
+            playTone('sine', 523.25, 0, 0.4, 0.5);
+            playTone('sine', 659.25, 0.18, 0.4, 0.5);
+            playTone('sine', 783.99, 0.36, 0.5, 0.5);
+            break;
+          case 'digital':
+            // Rapid double beep (alarming)
+            playTone('square', 1200, 0, 0.12, 0.4);
+            playTone('square', 900, 0.15, 0.12, 0.4);
+            playTone('square', 1200, 0.3, 0.18, 0.4);
+            break;
+          case 'gentle':
+            // Soft warm tone with long fade-out
+            playTone('sine', 440, 0, 0.7, 0.45, 220);
+            playTone('sine', 554.37, 0.25, 0.7, 0.3, 277.18);
+            break;
+          case 'classic':
+          default:
+            // Original Remindr beep: 880 -> 660 -> 880
+            playTone('sine', 880, 0, 0.3, 0.6);
+            playTone('sine', 660, 0.1, 0.2, 0.6);
+            playTone('sine', 880, 0.2, 0.15, 0.6);
+            break;
+        }
+
+        setTimeout(() => { try { audioContext.close(); } catch(e) {} }, 1500);
+      } catch(e) {}
+    })();
+  `;
 }
 
 function startReminderChecker() {
@@ -474,6 +522,25 @@ ipcMain.handle('test-discord-webhook', async () => {
   });
 });
 
+ipcMain.handle('set-sound-settings', (event, soundSettings) => {
+  const volume = parseFloat(soundSettings.soundVolume);
+  settings.soundVolume = !isNaN(volume) ? Math.min(1, Math.max(0, volume)) : 0.3;
+  settings.soundType = ['classic', 'chime', 'digital', 'gentle'].includes(soundSettings.soundType)
+    ? soundSettings.soundType
+    : 'classic';
+  saveSettings();
+  return settings;
+});
+
+ipcMain.handle('test-sound', () => {
+  if (mainWindow) {
+    const volume = typeof settings.soundVolume === 'number' ? settings.soundVolume : 0.3;
+    const soundType = settings.soundType || 'classic';
+    mainWindow.webContents.executeJavaScript(buildSoundScript(soundType, volume));
+  }
+  return { ok: true };
+});
+
 // ============ IPC Handlers - Quick Add ============
 
 ipcMain.on('quick-add-reminder', (event, reminder) => {
@@ -497,5 +564,17 @@ ipcMain.on('quick-add-reminder', (event, reminder) => {
 ipcMain.on('close-quick-add', () => {
   if (quickAddWindow) {
     quickAddWindow.hide();
+  }
+});
+
+ipcMain.on('resize-quick-add', (event, expanded) => {
+  if (quickAddWindow) {
+    const [x, y] = quickAddWindow.getPosition();
+    const currentHeight = quickAddWindow.getSize()[1];
+    const newHeight = expanded ? QUICK_ADD_HEIGHT_EXPANDED : QUICK_ADD_HEIGHT;
+    quickAddWindow.setSize(QUICK_ADD_WIDTH, newHeight, false);
+    // Re-center vertically around the current center
+    const diff = newHeight - currentHeight;
+    quickAddWindow.setPosition(x, y - diff / 2);
   }
 });

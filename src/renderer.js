@@ -277,6 +277,11 @@ const discordWebhookInput = document.getElementById('discord-webhook-input');
 const discordUserIdInput = document.getElementById('discord-user-id-input');
 const discordTestBtn = document.getElementById('discord-test-btn');
 const discordTestStatus = document.getElementById('discord-test-status');
+const soundVolume = document.getElementById('sound-volume');
+const soundVolumeLabel = document.getElementById('sound-volume-label');
+const soundTypeBtns = document.querySelectorAll('.sound-type-btn');
+const soundTestBtn = document.getElementById('sound-test-btn');
+const soundTestStatus = document.getElementById('sound-test-status');
 
 let isRecordingHotkey = false;
 
@@ -296,6 +301,30 @@ async function loadSettings() {
   hotkeyInput.value = formatHotkey(settings.hotkey);
   discordWebhookInput.value = settings.discordWebhookUrl || '';
   discordUserIdInput.value = settings.discordUserId || '';
+  applySoundSettings(settings);
+}
+
+function applySoundSettings(settings) {
+  const volume = typeof settings.soundVolume === 'number' ? settings.soundVolume : 0.3;
+  const percent = Math.round(volume * 100);
+  soundVolume.value = percent;
+  soundVolumeLabel.textContent = `${percent}%`;
+
+  const soundType = settings.soundType || 'classic';
+  soundTypeBtns.forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.sound === soundType);
+  });
+}
+
+async function saveSoundSettings() {
+  const volume = parseFloat(soundVolume.value) / 100;
+  const selectedBtn = document.querySelector('.sound-type-btn.selected');
+  const soundType = selectedBtn ? selectedBtn.dataset.sound : 'classic';
+
+  await ipcRenderer.invoke('set-sound-settings', {
+    soundVolume: volume,
+    soundType
+  });
 }
 
 async function saveDiscordSettings() {
@@ -418,3 +447,40 @@ discordUserIdInput.addEventListener('keydown', (e) => {
 });
 
 discordTestBtn.addEventListener('click', testDiscordWebhook);
+
+// ============ Sound Settings ============
+
+// Volume slider
+soundVolume.addEventListener('input', () => {
+  const percent = Math.round(soundVolume.value);
+  soundVolumeLabel.textContent = `${percent}%`;
+});
+
+soundVolume.addEventListener('change', () => {
+  saveSoundSettings();
+});
+
+// Sound type buttons
+soundTypeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    soundTypeBtns.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    saveSoundSettings();
+  });
+});
+
+// Test sound button
+soundTestBtn.addEventListener('click', async () => {
+  await saveSoundSettings();
+  soundTestBtn.disabled = true;
+  soundTestStatus.textContent = 'Playing...';
+  soundTestStatus.className = 'settings-status pending';
+
+  await ipcRenderer.invoke('test-sound');
+
+  setTimeout(() => {
+    soundTestBtn.disabled = false;
+    soundTestStatus.textContent = '';
+    soundTestStatus.className = 'settings-status';
+  }, 1500);
+});
