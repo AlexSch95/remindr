@@ -123,7 +123,8 @@ async function sendDiscordWebhook(reminder, options = {}) {
 function setAutostart(enabled) {
   app.setLoginItemSettings({
     openAtLogin: enabled,
-    path: app.getPath('exe')
+    path: app.getPath('exe'),
+    args: []
   });
 }
 
